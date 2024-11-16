@@ -6,43 +6,45 @@
           <n-icon size="24" class="logo-icon">
             <game-controller />
           </n-icon>
-          <n-h1>Stellar-联机大厅</n-h1>
+          <n-h1 class="logo-text">Stellar-联机大厅</n-h1>
         </div>
         <div class="header-right">
-          <n-button quaternary @click="toggleTheme">
-            <template #icon>
-              <n-icon>
-                <template v-if="isDark">
-                  <sunny />
-                </template>
-                <template v-else>
-                  <moon />
-                </template>
-              </n-icon>
-            </template>
-            {{ isDark ? '浅色' : '深色' }}主题
-          </n-button>
-          <n-button type="primary" @click="showCreateRoom = true">
-            <template #icon>
-              <n-icon><add-circle /></n-icon>
-            </template>
-            创建房间
-          </n-button>
-          <n-dropdown :options="userMenuOptions" @select="handleUserMenuSelect">
-            <n-button quaternary class="user-button">
-              <n-avatar
-                :src="authStore.userAvatar"
-                round
-                :size="32"
-              />
-              <span class="username">{{ authStore.user?.username }}</span>
-              <template v-if="authStore.user?.vipTime">
-                <n-tag size="small" type="warning" round>
-                  {{ authStore.user.group }}
-                </n-tag>
+          <n-space :size="12">
+            <n-button quaternary @click="toggleTheme" class="theme-button">
+              <template #icon>
+                <n-icon>
+                  <template v-if="isDark">
+                    <sunny />
+                  </template>
+                  <template v-else>
+                    <moon />
+                  </template>
+                </n-icon>
               </template>
+              <span class="button-text">{{ isDark ? '浅色' : '深色' }}主题</span>
             </n-button>
-          </n-dropdown>
+            <n-button type="primary" @click="showCreateRoom = true" class="create-button">
+              <template #icon>
+                <n-icon><add-circle /></n-icon>
+              </template>
+              <span class="button-text">创建房间</span>
+            </n-button>
+            <n-dropdown :options="userMenuOptions" @select="handleUserMenuSelect">
+              <n-button quaternary class="user-button">
+                <n-avatar
+                  :src="authStore.userAvatar"
+                  round
+                  :size="32"
+                />
+                <span class="username">{{ authStore.user?.username }}</span>
+                <template v-if="authStore.user?.vipTime">
+                  <n-tag size="small" type="warning" round class="vip-tag">
+                    <span class="vip-text">{{ authStore.user.group }}</span>
+                  </n-tag>
+                </template>
+              </n-button>
+            </n-dropdown>
+          </n-space>
         </div>
       </div>
     </n-layout-header>
@@ -100,10 +102,11 @@ const { rooms } = storeToRefs(lobbyStore)
 
 const showCreateRoom = ref(false)
 
-const handleCreateSuccess = () => {
+const handleCreateSuccess = async () => {
   showCreateRoom.value = false
-  // 刷新房间列表
-  lobbyStore.fetchRooms()
+  // 立即刷新房间列表
+  await lobbyStore.fetchRooms()
+  message.success('房间创建成功')
 }
 
 // 计算公开和私密房间数量
@@ -163,18 +166,23 @@ const toggleTheme = () => {
 
 <style scoped>
 .header {
-  height: 64px;
+  height: auto;
+  min-height: 64px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 1;
+  background: var(--body-color);
+  width: 100%;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 100%;
-  padding: 0 24px;
+  padding: 8px 24px;
+  min-height: 48px;
+  width: 100%;
 }
 
 .header-left {
@@ -183,18 +191,125 @@ const toggleTheme = () => {
   gap: 12px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  margin-right: 24px;
+}
+
+.logo-text {
+  font-size: clamp(18px, 2vw, 24px);
+  margin: 0;
+  white-space: nowrap;
+}
+
 .logo-icon {
-  color: #18a058;
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 8px;
+  min-width: 0;
+  height: auto;
+}
+
+.username {
+  margin: 0 4px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vip-tag {
+  flex-shrink: 0;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.vip-text {
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+  line-height: 1;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 8px 16px;
+  }
+
+  .header-right {
+    margin-right: 24px;
+  }
+
+  .button-text {
+    display: none;
+  }
+
+  .theme-button,
+  .create-button {
+    padding: 4px 8px;
+  }
+
+  .user-button {
+    padding: 4px 8px;
+  }
+
+  .username {
+    max-width: 80px;
+  }
+
+  .vip-tag {
+    min-width: 35px;
+    padding: 0 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding: 8px 12px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .header-left,
+  .header-right {
+    margin: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .username {
+    max-width: 60px;
+  }
+
+  .vip-tag {
+    min-width: 35px;
+  }
+
+  .header-right {
+    margin-right: 0;
+  }
+}
+
+/* 确保内容区域不会被头部遮挡 */
+.content {
+  padding: 24px;
+  min-height: calc(100vh - 64px);
 }
 
 .sider {
   padding: 24px;
   background: #f5f5f5;
-}
-
-.content {
-  padding: 24px;
-  min-height: calc(100vh - 64px);
 }
 
 .card-header {
@@ -217,28 +332,11 @@ const toggleTheme = () => {
   padding: 0 !important;
 }
 
-.header-right {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
 :deep(.n-alert) {
   padding: 12px 16px;
 }
 
 :deep(.n-statistic) {
   text-align: center;
-}
-
-.user-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
-}
-
-.username {
-  margin: 0 4px;
 }
 </style> 

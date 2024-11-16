@@ -326,6 +326,19 @@ const refreshRooms = async () => {
   if (timeSinceLastRefresh < refreshCooldown && !loading.value) {
     cooldownRemaining.value = Math.ceil((refreshCooldown - timeSinceLastRefresh) / 1000)
     message.warning(`请等待 ${cooldownRemaining.value} 秒后再刷新`)
+    
+    // 启动倒计时
+    if (refreshTimer.value) clearInterval(refreshTimer.value)
+    refreshTimer.value = setInterval(() => {
+      const remaining = Math.ceil((refreshCooldown - (Date.now() - lastRefreshTime.value)) / 1000)
+      if (remaining <= 0) {
+        clearInterval(refreshTimer.value)
+        cooldownRemaining.value = 0
+      } else {
+        cooldownRemaining.value = remaining
+      }
+    }, 1000)
+    
     return
   }
   
@@ -333,7 +346,7 @@ const refreshRooms = async () => {
     loading.value = true
     await store.fetchRooms()
     lastRefreshTime.value = now
-    cooldownRemaining.value = 0
+    cooldownRemaining.value = 0 // 重置倒计时
     message.success('刷新成功')
   } catch (error) {
     message.error('刷新房间列表失败')
@@ -369,7 +382,7 @@ const handleDeleteRoom = async () => {
     await store.deleteRoom(selectedRoom.value.id)
     message.success('房间删除成功')
     showDetails.value = false
-    refreshRooms()
+    await refreshRooms()
   } catch (error) {
     message.error(error.message || '删除房间失败')
   }
